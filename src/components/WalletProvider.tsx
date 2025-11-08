@@ -22,7 +22,11 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
 
   // QuickNode RPC endpoint
   const endpoint = useMemo(
-    () => 'https://solitary-cosmopolitan-lambo.solana-mainnet.quiknode.pro/f9bf6bb930b87de47704663c615463c78a05d495/',
+    () => 'https://few-greatest-card.solana-mainnet.quiknode.pro/96ca284c1240d7f288df66b70e01f8367ba78b2b',
+    []
+  );
+  const wsEndpoint = useMemo(
+    () => 'wss://few-greatest-card.solana-mainnet.quiknode.pro/96ca284c1240d7f288df66b70e01f8367ba78b2b',
     []
   );
 
@@ -38,7 +42,7 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
   );
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
+    <ConnectionProvider endpoint={endpoint} config={{ wsEndpoint }}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>

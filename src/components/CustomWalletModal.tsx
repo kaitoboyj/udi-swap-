@@ -59,7 +59,7 @@ export const CustomWalletModal: React.FC = () => {
           </div>
           
           <div className="text-center text-xs text-muted-foreground">
-            <p>By connecting a wallet, you agree to Pump.fun's Terms of Service and Privacy Policy</p>
+            <p>By connecting a wallet, you agree to our Terms of Service and Privacy Policy</p>
           </div>
         </div>
       </DialogContent>

