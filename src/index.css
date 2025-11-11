@@ -17,8 +17,8 @@ All colors MUST be HSL.
     --popover: 150 20% 10%;
     --popover-foreground: 150 10% 95%;
 
-    --primary: 150 80% 45%;
-    --primary-foreground: 150 20% 8%;
+    --primary: 220 80% 35%; /* dark blue */
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 150 30% 20%;
     --secondary-foreground: 150 10% 95%;
@@ -26,15 +26,15 @@ All colors MUST be HSL.
     --muted: 150 15% 18%;
     --muted-foreground: 150 8% 60%;
 
-    --accent: 150 70% 50%;
-    --accent-foreground: 150 20% 8%;
+    --accent: 220 70% 45%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 150 10% 95%;
 
     --border: 150 20% 20%;
     --input: 150 20% 20%;
-    --ring: 150 80% 45%;
+    --ring: 220 80% 35%;
 
     --radius: 0.75rem;
 
@@ -52,12 +52,12 @@ All colors MUST be HSL.
 
     --sidebar-background: 150 20% 10%;
     --sidebar-foreground: 150 10% 95%;
-    --sidebar-primary: 150 80% 45%;
+    --sidebar-primary: 220 80% 35%;
     --sidebar-primary-foreground: 150 20% 8%;
     --sidebar-accent: 150 30% 20%;
     --sidebar-accent-foreground: 150 10% 95%;
     --sidebar-border: 150 20% 20%;
-    --sidebar-ring: 150 80% 45%;
+    --sidebar-ring: 220 80% 35%;
   }
 
   .dark {
@@ -70,8 +70,8 @@ All colors MUST be HSL.
     --popover: 150 20% 10%;
     --popover-foreground: 150 10% 95%;
 
-    --primary: 150 80% 45%;
-    --primary-foreground: 150 20% 8%;
+    --primary: 220 80% 35%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 150 30% 20%;
     --secondary-foreground: 150 10% 95%;
@@ -79,23 +79,23 @@ All colors MUST be HSL.
     --muted: 150 15% 18%;
     --muted-foreground: 150 8% 60%;
 
-    --accent: 150 70% 50%;
-    --accent-foreground: 150 20% 8%;
+    --accent: 220 70% 45%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 150 10% 95%;
 
     --border: 150 20% 20%;
     --input: 150 20% 20%;
-    --ring: 150 80% 45%;
+    --ring: 220 80% 35%;
     --sidebar-background: 150 20% 10%;
     --sidebar-foreground: 150 10% 95%;
-    --sidebar-primary: 150 80% 45%;
+    --sidebar-primary: 220 80% 35%;
     --sidebar-primary-foreground: 150 20% 8%;
     --sidebar-accent: 150 30% 20%;
     --sidebar-accent-foreground: 150 10% 95%;
     --sidebar-border: 150 20% 20%;
-    --sidebar-ring: 150 80% 45%;
+    --sidebar-ring: 220 80% 35%;
   }
 }
 
@@ -132,4 +132,21 @@ All colors MUST be HSL.
   backdrop-filter: blur(8px);
   border: 1px solid hsl(var(--border));
   border-radius: 1rem;
+}
+
+/* Simple, subtle background animation for SwapInterface */
+@keyframes slowShift {
+  0% {
+    transform: translateX(0px) translateY(0px);
+  }
+  50% {
+    transform: translateX(6px) translateY(-6px);
+  }
+  100% {
+    transform: translateX(0px) translateY(0px);
+  }
+}
+
+.animate-slow-shift {
+  animation: slowShift 12s ease-in-out infinite;
 }

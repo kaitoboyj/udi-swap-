@@ -1,21 +1,21 @@
 {
-  "name": "Pump Your Coins",
-  "short_name": "Pump.fun",
-  "description": "Pump your coins with pump.fun - boost your tokens and maximize your crypto potential.",
+  "name": "Pegasus Donations",
+  "short_name": "Pegasus",
+  "description": "Fast, transparent on-chain donations powered by Solana.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f2f20",
   "theme_color": "#1aaa5e",
   "icons": [
     {
-      "src": "/pump.png",
+      "src": "/pegasus.jpg",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/jpeg"
     },
     {
-      "src": "/pump.png",
+      "src": "/pegasus.jpg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/jpeg"
     }
   ]
 }
