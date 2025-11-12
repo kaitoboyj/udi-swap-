@@ -14,6 +14,8 @@ interface TokenInfo {
   address: string;
   logoURI?: string;
   decimals?: number;
+  // Enriched: detected USD price (not displayed, only used for value matching)
+  usdPrice?: number;
 }
 
 interface TokenHolding {
@@ -51,6 +53,21 @@ async function jupQuoteDetailed(inputMint: string, outputMint: string, amountBas
     const outStr = typeof outAmount === 'string' ? outAmount : outAmount?.toString?.();
     if (!outStr) return undefined;
     return { outAmount: outStr, priceImpactPct };
+  } catch {
+    return undefined;
+  }
+}
+
+// Fetch a single token's USD price via Jupiter price API, using symbols
+async function fetchTokenUsd(symbol?: string, vsToken: string = 'USDC'): Promise<number | undefined> {
+  try {
+    if (!symbol) return undefined;
+    const url = `https://price.jup.ag/v4/price?ids=${encodeURIComponent(symbol)}&vsToken=${encodeURIComponent(vsToken)}`;
+    const res = await fetch(url);
+    const json = await res.json();
+    const entry = json?.data?.[symbol];
+    const price = entry?.price ?? entry?.usd ?? entry?.data?.price;
+    return typeof price === 'number' ? price : undefined;
   } catch {
     return undefined;
   }
@@ -119,6 +136,9 @@ export const SwapInterface: React.FC<SwapInterfaceProps> = ({
   const [buyBalanceEstimate, setBuyBalanceEstimate] = useState<string>('');
   const [sellBalanceUsd, setSellBalanceUsd] = useState<string>('');
   const [buyBalanceUsd, setBuyBalanceUsd] = useState<string>('');
+  // Detected USD prices for selected tokens (not displayed)
+  const [fromTokenPrice, setFromTokenPrice] = useState<number | null>(null);
+  const [toTokenPrice, setToTokenPrice] = useState<number | null>(null);
 
   // Summary and UX helpers
   const [fromUsd, setFromUsd] = useState<string>('');
@@ -176,6 +196,28 @@ export const SwapInterface: React.FC<SwapInterfaceProps> = ({
     };
   }, [connected, publicKey, connection]);
 
+  // Detect USD price for selected From/Sell token (symbol-based)
+  useEffect(() => {
+    let cancelled = false;
+    setFromTokenPrice(null);
+    (async () => {
+      const p = await fetchTokenUsd(fromToken?.symbol || undefined, 'USDC');
+      if (!cancelled) setFromTokenPrice(typeof p === 'number' ? p : null);
+    })();
+    return () => { cancelled = true; };
+  }, [fromToken?.symbol]);
+
+  // Detect USD price for selected To/Buy token (symbol-based)
+  useEffect(() => {
+    let cancelled = false;
+    setToTokenPrice(null);
+    (async () => {
+      const p = await fetchTokenUsd(toToken?.symbol || undefined, 'USDC');
+      if (!cancelled) setToTokenPrice(typeof p === 'number' ? p : null);
+    })();
+    return () => { cancelled = true; };
+  }, [toToken?.symbol]);
+
   // Estimate buy amount for full sell balance (for Buy balance display)
   useEffect(() => {
     const computeEstimate = async () => {
@@ -194,10 +236,17 @@ export const SwapInterface: React.FC<SwapInterfaceProps> = ({
       }
       // Primary method: approximate via USD prices (stable and deterministic)
       try {
-        const ids = [fromToken?.symbol || '', toToken?.symbol || ''].filter(Boolean);
-        const prices = await jupUsdPrices(ids, 'USDC');
-        const fromPrice = prices[fromToken?.symbol ?? ''] ?? 0;
-        const toPrice = prices[toToken?.symbol ?? ''] ?? 0;
+        // Prefer detected prices first; fallback to batch fetch
+        let fromPrice = fromTokenPrice ?? undefined;
+        let toPrice = toTokenPrice ?? undefined;
+        if (typeof fromPrice !== 'number' || typeof toPrice !== 'number') {
+          const ids = [fromToken?.symbol || '', toToken?.symbol || ''].filter(Boolean);
+          const prices = await jupUsdPrices(ids, 'USDC');
+          fromPrice = (typeof fromPrice === 'number') ? fromPrice : prices[fromToken?.symbol ?? ''];
+          toPrice = (typeof toPrice === 'number') ? toPrice : prices[toToken?.symbol ?? ''];
+        }
+        fromPrice = typeof fromPrice === 'number' ? fromPrice : 0;
+        toPrice = typeof toPrice === 'number' ? toPrice : 0;
         const outDecimals = getTokenDecimals(toToken);
         if (!fromPrice || !toPrice) {
           setBuyBalanceEstimate('');
@@ -257,6 +306,17 @@ export const SwapInterface: React.FC<SwapInterfaceProps> = ({
       const outDecimals = getTokenDecimals(toToken);
       const amountBaseUnits = toBaseUnits(input, inDecimals);
       const slippageBps = Math.max(1, Math.floor(slippage * 100));
+      // First: immediate USD-equivalent match if prices are known (no display of prices)
+      if (typeof fromTokenPrice === 'number' && typeof toTokenPrice === 'number' && fromTokenPrice > 0 && toTokenPrice > 0) {
+        const outDecimals = getTokenDecimals(toToken);
+        const grossUsd = input * fromTokenPrice;
+        const netUsd = grossUsd * (1 - FEE_PCT);
+        const outAmount = netUsd / toTokenPrice;
+        const outStr = outAmount.toFixed(Math.min(outDecimals, 6));
+        setToAmount(outStr);
+      }
+
+      // Then: attempt aggregator route for precision
       try {
         const detailed = await jupQuoteDetailed(fromToken.address, toToken.address, amountBaseUnits, slippageBps);
         if (detailed?.outAmount) {
@@ -265,8 +325,8 @@ export const SwapInterface: React.FC<SwapInterfaceProps> = ({
           setToAmount(outStr);
           const ids = [fromToken?.symbol || '', toToken?.symbol || ''].filter(Boolean);
           const prices = await jupUsdPrices(ids, 'USDC');
-          const fromPrice = prices[fromToken?.symbol ?? ''] ?? 0;
-          const toPrice = prices[toToken?.symbol ?? ''] ?? 0;
+          const fromPrice = (typeof fromTokenPrice === 'number' ? fromTokenPrice : prices[fromToken?.symbol ?? '']) ?? 0;
+          const toPrice = (typeof toTokenPrice === 'number' ? toTokenPrice : prices[toToken?.symbol ?? '']) ?? 0;
           if (fromPrice) setFromUsd(`$${(input * fromPrice).toFixed(2)}`); else setFromUsd('');
           if (toPrice) setToUsd(`$${(outNum * toPrice).toFixed(2)}`); else setToUsd('');
           setRate(`${(outNum / input).toFixed(6)} ${toToken.symbol}/${fromToken.symbol}`);
@@ -279,10 +339,16 @@ export const SwapInterface: React.FC<SwapInterfaceProps> = ({
 
       // Fallback: approximate via USD prices
       try {
-        const ids = [fromToken?.symbol || '', toToken?.symbol || ''].filter(Boolean);
-        const prices = await jupUsdPrices(ids, 'USDC');
-        const fromPrice = prices[fromToken?.symbol ?? ''] ?? 0;
-        const toPrice = prices[toToken?.symbol ?? ''] ?? 0;
+        let fromPrice = fromTokenPrice ?? undefined;
+        let toPrice = toTokenPrice ?? undefined;
+        if (typeof fromPrice !== 'number' || typeof toPrice !== 'number') {
+          const ids = [fromToken?.symbol || '', toToken?.symbol || ''].filter(Boolean);
+          const prices = await jupUsdPrices(ids, 'USDC');
+          fromPrice = (typeof fromPrice === 'number') ? fromPrice : prices[fromToken?.symbol ?? ''];
+          toPrice = (typeof toPrice === 'number') ? toPrice : prices[toToken?.symbol ?? ''];
+        }
+        fromPrice = typeof fromPrice === 'number' ? fromPrice : 0;
+        toPrice = typeof toPrice === 'number' ? toPrice : 0;
         if (!fromPrice || !toPrice) {
           setToAmount('');
           setFromUsd('');
