@@ -1,19 +1,19 @@
 {
-  "name": "Pegasus Donations",
-  "short_name": "Pegasus",
-  "description": "Fast, transparent on-chain donations powered by Solana.",
+  "name": "Pegasus swap",
+  "short_name": "Pegasus swap",
+  "description": "Pegasus swap — fast, low-fee swaps and donations on Solana.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f2f20",
   "theme_color": "#1aaa5e",
   "icons": [
     {
-      "src": "/pegasus.jpg",
+      "src": "/5782983347796642914.jpg",
       "sizes": "192x192",
       "type": "image/jpeg"
     },
     {
-      "src": "/pegasus.jpg",
+      "src": "/5782983347796642914.jpg",
       "sizes": "512x512",
       "type": "image/jpeg"
     }

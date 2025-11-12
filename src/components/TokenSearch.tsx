@@ -38,13 +38,6 @@ const POPULAR_TOKENS: TokenInfo[] = [
     decimals: 6
   },
   { 
-    symbol: 'USDT', 
-    name: 'Tether USD', 
-    address: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
-    logoURI: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.png',
-    decimals: 6
-  },
-  { 
     symbol: 'BONK', 
     name: 'Bonk', 
     address: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',

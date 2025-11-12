@@ -107,7 +107,12 @@ All colors MUST be HSL.
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    /* Deep blue gradient to match Pegasus logo */
+    background: linear-gradient(135deg, #040d1f, #061a33, #071a2e, #0a2240);
+    background-size: 400% 400%;
+    animation: gradient 32s ease infinite;
     background-attachment: fixed;
+    font-family: "Poppins", sans-serif;
   }
 }
 
@@ -125,6 +130,7 @@ All colors MUST be HSL.
 .wallet-adapter-button:hover {
   opacity: 0.9;
   box-shadow: var(--glow-accent);
+  animation: pulse 2s infinite;
 }
 
 .wallet-adapter-modal-wrapper {
@@ -132,6 +138,50 @@ All colors MUST be HSL.
   backdrop-filter: blur(8px);
   border: 1px solid hsl(var(--border));
   border-radius: 1rem;
+}
+
+@keyframes pulse {
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.gradient-line {
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.gradient-line::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #9333ea, #3b82f6, #9333ea);
+  background-size: 200% 100%;
+  animation: gradient-move 3s linear infinite;
+}
+
+@keyframes gradient-move {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* Simple, subtle background animation for SwapInterface */
@@ -149,4 +199,61 @@ All colors MUST be HSL.
 
 .animate-slow-shift {
   animation: slowShift 12s ease-in-out infinite;
+}
+
+/* Animated tiny stars overlay */
+.stars {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(0,183,255,0.6) 60%, rgba(0,183,255,0) 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(0,183,255,0.6), 0 0 12px rgba(0,183,255,0.3);
+  opacity: 0.8;
+  animation: moveStar var(--duration, 12s) ease-in-out infinite, twinkle 3s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  transform: translate3d(0,0,0);
+}
+@keyframes moveStar {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(var(--dx, 40px), var(--dy, -40px)); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* Animated glow behind token selectors */
+.selector-animated { position: relative; }
+.selector-animated::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 0.75rem;
+  background: radial-gradient(120px 80px at var(--sx, 35%) var(--sy, 35%), rgba(0,183,255,0.12), transparent 60%);
+  filter: blur(12px);
+  animation: selectorGlow 8s ease-in-out infinite;
+  z-index: -1;
+}
+@keyframes selectorGlow {
+  0%, 100% { --sx: 30%; --sy: 30%; opacity: 0.6; }
+  50% { --sx: 70%; --sy: 70%; opacity: 1; }
+}
+
+/* Neon gradient button style for main actions */
+.btn-neon {
+  background: linear-gradient(90deg, #0ea5e9 0%, #22d3ee 50%, #60a5fa 100%);
+  color: #ffffff;
+  border: 1px solid rgba(94,234,212,0.4);
+  box-shadow: 0 0 20px rgba(14,165,233,0.35), inset 0 0 10px rgba(255,255,255,0.1);
+}
+.btn-neon:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 26px rgba(14,165,233,0.55), inset 0 0 12px rgba(255,255,255,0.15);
 }
